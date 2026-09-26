@@ -35,6 +35,7 @@ export default function StudentPage() {
   const [officeId, setOfficeId] = useState("");
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingOffices, setLoadingOffices] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -47,6 +48,8 @@ export default function StudentPage() {
         if (data.length > 0) setOfficeId(data[0].id);
       } catch {
         setError("Unable to load offices. Please refresh the page.");
+      } finally {
+        setLoadingOffices(false);
       }
     }
 
@@ -118,7 +121,7 @@ export default function StudentPage() {
   return (
     <main className="min-h-screen bg-[#f4f7f6] text-[#15201c]">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex items-center justify-between py-3">
+        <header className="flex items-center justify-between gap-4 py-3">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#123c31] text-lg font-bold text-white">Q</div>
             <div>
@@ -126,7 +129,10 @@ export default function StudentPage() {
               <p className="text-xs text-[#66756f]">School queue system</p>
             </div>
           </Link>
-          <span className="rounded-full border border-[#d9e3df] bg-white px-3 py-1.5 text-xs font-medium text-[#53625d]">Student portal</span>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="rounded-full border border-[#d9e3df] bg-white px-3 py-1.5 text-xs font-medium text-[#53625d] transition hover:bg-[#eef3f1]">Back home</Link>
+            <span className="rounded-full border border-[#d9e3df] bg-white px-3 py-1.5 text-xs font-medium text-[#53625d]">Student portal</span>
+          </div>
         </header>
 
         <section className="flex flex-1 items-center justify-center py-10">
@@ -196,15 +202,20 @@ export default function StudentPage() {
                     <label className="block">
                       <span className="mb-2 block text-sm font-medium">Office</span>
                       <select required value={officeId} onChange={(event) => setOfficeId(event.target.value)} className="w-full rounded-xl border border-[#d7e0dc] bg-white px-4 py-3.5 text-sm outline-none transition focus:border-[#2d6a58] focus:ring-2 focus:ring-[#d9ece5]">
-                        {offices.length === 0 && <option value="">Loading offices...</option>}
+                        {loadingOffices && <option value="">Loading offices...</option>}
+                        {!loadingOffices && offices.length === 0 && <option value="">No offices available</option>}
                         {offices.map((office) => <option key={office.id} value={office.id}>{office.name}</option>)}
                       </select>
                     </label>
                   </div>
 
+                  {!loadingOffices && offices.length === 0 && !error && (
+                    <p className="mt-4 rounded-xl bg-[#f3f6f5] px-4 py-3 text-sm text-[#66756f]">No office is currently accepting queue entries.</p>
+                  )}
+
                   {error && <p className="mt-4 rounded-xl bg-[#fff0ef] px-4 py-3 text-sm text-[#a43b35]">{error}</p>}
 
-                  <button type="submit" disabled={loading || !officeId} className="mt-6 w-full rounded-xl bg-[#123c31] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0d3027] disabled:cursor-not-allowed disabled:opacity-50">{loading ? "Joining queue..." : "Join queue"}</button>
+                  <button type="submit" disabled={loading || loadingOffices || !officeId} className="mt-6 w-full rounded-xl bg-[#123c31] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0d3027] disabled:cursor-not-allowed disabled:opacity-50">{loading ? "Joining queue..." : "Join queue"}</button>
 
                   <p className="mt-4 text-center text-xs text-[#87948f]">Your details are used only to manage your queue entry.</p>
                 </form>
