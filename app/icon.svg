@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="QueueLess logo">
+  <defs>
+    <linearGradient id="q" x1="12" y1="10" x2="47" y2="49" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17865f"/>
+      <stop offset="1" stop-color="#083c31"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="34" y1="32" x2="56" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5fe6aa"/>
+      <stop offset="1" stop-color="#16b878"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#ffffff"/>
+  <path d="M31.5 12C20.73 12 12 20.73 12 31.5S20.73 51 31.5 51c4.44 0 8.54-1.49 11.82-4l-6.15-6.15a10.95 10.95 0 0 1-5.67 1.57c-6.03 0-10.92-4.89-10.92-10.92S25.47 20.58 31.5 20.58 42.42 25.47 42.42 31.5c0 1.13-.17 2.22-.49 3.25h8.84c.15-1.06.23-2.15.23-3.25C51 20.73 42.27 12 31.5 12Z" fill="url(#q)"/>
+  <path d="M34.5 33.5h10.3l-4.2-4.2a2 2 0 0 1 0-2.82l1.66-1.66a2 2 0 0 1 2.82 0l10.5 10.5a2 2 0 0 1 0 2.83l-10.5 10.5a2 2 0 0 1-2.82 0L40.6 47a2 2 0 0 1 0-2.82l4.2-4.18H34.5a2 2 0 0 1-2-2v-2.5a2 2 0 0 1 2-2Z" fill="url(#arrow)"/>
+</svg>
