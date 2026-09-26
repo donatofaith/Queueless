@@ -26,17 +26,27 @@ export async function POST(request: Request) {
     }
 
     const existingEntry = await sql`
-      SELECT id
-      FROM queue_entries
-      WHERE office_id = ${officeId}
-        AND lower(student_id) = lower(${studentId})
-        AND status IN ('waiting', 'called')
+      SELECT q.id, q.queue_number, q.status, o.name AS office_name
+      FROM queue_entries q
+      JOIN offices o ON o.id = q.office_id
+      WHERE lower(q.student_id) = lower(${studentId})
+        AND q.status IN ('waiting', 'called')
+      ORDER BY q.joined_at DESC
       LIMIT 1
     `;
 
     if (existingEntry.length > 0) {
+      const active = existingEntry[0];
       return Response.json(
-        { error: "You already have an active queue entry for this office." },
+        {
+          error: `You already have an active queue at ${active.office_name}. Complete or leave that queue before joining another one.`,
+          activeQueue: {
+            id: active.id,
+            officeName: active.office_name,
+            queueNumber: active.queue_number,
+            status: active.status,
+          },
+        },
         { status: 409 }
       );
     }
