@@ -116,7 +116,7 @@ export default function StaffPage() {
       <div className="mx-auto min-h-screen w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-12">
         <header className="flex flex-col gap-5 py-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="soft-button flex h-11 w-11 items-center justify-center rounded-2xl bg-[#123c31] text-lg font-bold text-white">Q</div>
+            <img src="/icon.svg" alt="QueueLess logo" className="h-11 w-11 rounded-2xl shadow-[0_10px_25px_rgba(18,60,49,0.16)]" />
             <div>
               <p className="text-lg font-semibold tracking-[-0.03em]">QueueLess</p>
               <p className="text-xs text-[#73827c]">Staff dashboard</p>
