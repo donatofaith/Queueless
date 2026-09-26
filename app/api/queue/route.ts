@@ -25,6 +25,22 @@ export async function POST(request: Request) {
       return Response.json({ error: "Selected office is unavailable" }, { status: 404 });
     }
 
+    const existingEntry = await sql`
+      SELECT id
+      FROM queue_entries
+      WHERE office_id = ${officeId}
+        AND lower(student_id) = lower(${studentId})
+        AND status IN ('waiting', 'called')
+      LIMIT 1
+    `;
+
+    if (existingEntry.length > 0) {
+      return Response.json(
+        { error: "You already have an active queue entry for this office." },
+        { status: 409 }
+      );
+    }
+
     const inserted = await sql`
       INSERT INTO queue_entries (
         student_name,
