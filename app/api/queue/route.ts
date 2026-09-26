@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       FROM queue_entries
       WHERE office_id = ${officeId}
         AND status = 'waiting'
-        AND joined_at <= ${entry.joined_at}
+        AND queue_number <= ${entry.queue_number}
     `;
 
     return Response.json(
