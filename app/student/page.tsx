@@ -30,6 +30,7 @@ export default function StudentPage() {
   const [studentId, setStudentId] = useState("");
   const [officeId, setOfficeId] = useState("");
   const [queueEntry, setQueueEntry] = useState<QueueEntry | null>(null);
+  const [savedQueueId, setSavedQueueId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,13 +46,13 @@ export default function StudentPage() {
         setError("Unable to load offices. Please refresh the page.");
       }
     }
+
     loadOffices();
-    const savedId = window.localStorage.getItem("queueless-entry-id");
-    if (savedId) loadQueueEntry(savedId);
+    setSavedQueueId(window.localStorage.getItem("queueless-entry-id"));
   }, []);
 
   useEffect(() => {
-    if (!queueEntry || queueEntry.status !== "waiting") return;
+    if (!queueEntry || !["waiting", "called"].includes(queueEntry.status)) return;
     const interval = window.setInterval(() => loadQueueEntry(queueEntry.id), 3000);
     return () => window.clearInterval(interval);
   }, [queueEntry?.id, queueEntry?.status]);
@@ -60,7 +61,10 @@ export default function StudentPage() {
     try {
       const response = await fetch(`/api/queue/${id}`, { cache: "no-store" });
       if (!response.ok) {
-        if (response.status === 404) window.localStorage.removeItem("queueless-entry-id");
+        if (response.status === 404) {
+          window.localStorage.removeItem("queueless-entry-id");
+          setSavedQueueId(null);
+        }
         return;
       }
       setQueueEntry(await response.json());
@@ -71,6 +75,7 @@ export default function StudentPage() {
     event.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       const response = await fetch("/api/queue", {
         method: "POST",
@@ -78,11 +83,14 @@ export default function StudentPage() {
         body: JSON.stringify({ studentName, studentId, officeId }),
       });
       const data = await response.json();
+
       if (!response.ok) {
         setError(data.error || "Unable to join the queue.");
         return;
       }
+
       setQueueEntry(data);
+      setSavedQueueId(data.id);
       window.localStorage.setItem("queueless-entry-id", data.id);
     } catch {
       setError("Unable to join the queue. Please try again.");
@@ -91,11 +99,17 @@ export default function StudentPage() {
     }
   }
 
-  function resetTracking() {
-    window.localStorage.removeItem("queueless-entry-id");
+  function startAnotherQueue() {
     setQueueEntry(null);
     setStudentName("");
     setStudentId("");
+    setError("");
+  }
+
+  function clearSavedQueue() {
+    window.localStorage.removeItem("queueless-entry-id");
+    setSavedQueueId(null);
+    setQueueEntry(null);
   }
 
   return (
@@ -155,12 +169,23 @@ export default function StudentPage() {
                     <p className="mt-2 text-sm text-[#72817b]">Your queue status refreshes automatically.</p>
                   </div>
 
-                  {queueEntry.status !== "waiting" && (
-                    <button type="button" onClick={resetTracking} className="soft-button mt-6 w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329]">Join another queue</button>
-                  )}
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <button type="button" onClick={startAnotherQueue} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329]">Join another queue</button>
+                    <button type="button" onClick={clearSavedQueue} className="soft-inset rounded-2xl px-5 py-4 text-sm font-bold text-[#52635c] transition hover:text-[#123c31]">Forget this queue</button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={joinQueue}>
+                  {savedQueueId && (
+                    <div className="mb-5 flex flex-col gap-3 rounded-[22px] border border-[#cfe0d9] bg-[#eef6f2] p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-[#173c31]">You already have a saved queue.</p>
+                        <p className="mt-1 text-xs text-[#6f8079]">You can resume it or start a new one.</p>
+                      </div>
+                      <button type="button" onClick={() => loadQueueEntry(savedQueueId)} className="rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-[#245b4b] shadow-sm">View saved queue</button>
+                    </div>
+                  )}
+
                   <div className="mb-7">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#71817a]">New queue entry</p>
                     <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Join a queue</h2>
