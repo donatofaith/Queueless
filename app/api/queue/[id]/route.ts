@@ -37,7 +37,7 @@ export async function GET(
         FROM queue_entries
         WHERE office_id = ${entry.office_id}
           AND status = 'waiting'
-          AND joined_at <= ${entry.joined_at}
+          AND queue_number <= ${entry.queue_number}
       `;
 
       position = positionResult[0].position;
