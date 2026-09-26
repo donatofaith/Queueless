@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-type Office = {
-  id: string;
-  name: string;
-};
-
+type Office = { id: string; name: string };
 type QueueStudent = {
   id: string;
   student_name: string;
@@ -17,7 +13,6 @@ type QueueStudent = {
   joined_at: string;
   called_at?: string | null;
 };
-
 type StaffQueueResponse = {
   office: Office;
   called: QueueStudent | null;
@@ -33,10 +28,7 @@ export default function StaffPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedOffice = useMemo(
-    () => offices.find((office) => office.id === officeId),
-    [offices, officeId]
-  );
+  const selectedOffice = useMemo(() => offices.find((office) => office.id === officeId), [offices, officeId]);
 
   useEffect(() => {
     async function loadOffices() {
@@ -47,18 +39,16 @@ export default function StaffPage() {
         setOffices(data);
         if (data.length > 0) setOfficeId(data[0].id);
       } catch {
-        setError("Unable to load offices. Please refresh the page.");
+        setError("Unable to load offices.");
       } finally {
         setLoading(false);
       }
     }
-
     loadOffices();
   }, []);
 
   useEffect(() => {
     if (!officeId) return;
-
     loadQueue();
     const interval = window.setInterval(loadQueue, 3000);
     return () => window.clearInterval(interval);
@@ -66,9 +56,7 @@ export default function StaffPage() {
 
   async function loadQueue() {
     try {
-      const response = await fetch(`/api/staff/queue?officeId=${officeId}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(`/api/staff/queue?officeId=${officeId}`, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || "Unable to load queue.");
@@ -85,7 +73,6 @@ export default function StaffPage() {
     if (!officeId) return;
     setActionLoading(true);
     setError("");
-
     try {
       const response = await fetch("/api/staff/queue/next", {
         method: "POST",
@@ -109,11 +96,8 @@ export default function StaffPage() {
     if (!queue?.called) return;
     setActionLoading(true);
     setError("");
-
     try {
-      const response = await fetch(`/api/staff/queue/${queue.called.id}/served`, {
-        method: "POST",
-      });
+      const response = await fetch(`/api/staff/queue/${queue.called.id}/served`, { method: "POST" });
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || "Unable to mark student as served.");
@@ -128,119 +112,100 @@ export default function StaffPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f7f6] text-[#15201c]">
-      <div className="mx-auto min-h-screen w-full max-w-6xl px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-4 border-b border-[#dce5e1] pb-5 sm:flex-row sm:items-center sm:justify-between">
+    <main className="min-h-screen text-[#10201a]">
+      <div className="mx-auto min-h-screen w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-12">
+        <header className="flex flex-col gap-5 py-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#123c31] text-lg font-bold text-white">Q</div>
+            <div className="soft-button flex h-11 w-11 items-center justify-center rounded-2xl bg-[#123c31] text-lg font-bold text-white">Q</div>
             <div>
-              <p className="text-lg font-semibold tracking-tight">QueueLess</p>
-              <p className="text-xs text-[#66756f]">Staff dashboard</p>
+              <p className="text-lg font-semibold tracking-[-0.03em]">QueueLess</p>
+              <p className="text-xs text-[#73827c]">Staff dashboard</p>
             </div>
           </Link>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/" className="rounded-xl border border-[#d7e0dc] bg-white px-4 py-2.5 text-sm font-medium text-[#53625d] transition hover:bg-[#eef3f1]">Back home</Link>
-            <label className="text-sm font-medium text-[#53625d]">Office</label>
-            <select
-              value={officeId}
-              onChange={(event) => setOfficeId(event.target.value)}
-              disabled={offices.length === 0}
-              className="rounded-xl border border-[#d7e0dc] bg-white px-4 py-2.5 text-sm outline-none focus:border-[#2d6a58] disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <Link href="/" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">← Home</Link>
+            <select value={officeId} onChange={(e) => setOfficeId(e.target.value)} className="soft-inset rounded-2xl border-0 px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#bcd8cd]">
               {offices.length === 0 && <option value="">No offices available</option>}
-              {offices.map((office) => (
-                <option key={office.id} value={office.id}>{office.name}</option>
-              ))}
+              {offices.map((office) => <option key={office.id} value={office.id}>{office.name}</option>)}
             </select>
           </div>
         </header>
 
-        <section className="py-8">
-          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <section className="py-9">
+          <div className="fade-up mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-[#66756f]">Active queue</p>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">{selectedOffice?.name || "No office selected"}</h1>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#dfeee8] px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#255b4c]">
+                <span className="pulse-dot h-2 w-2 rounded-full bg-[#2f7b65]" /> Live queue
+              </div>
+              <h1 className="text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">{selectedOffice?.name || "Choose an office"}</h1>
+              <p className="mt-2 text-sm text-[#6f7f78]">Manage the current line without the crowd.</p>
             </div>
-            {officeId && <p className="text-sm text-[#66756f]">Refreshes automatically every 3 seconds</p>}
+            <div className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#66766f]">Auto-refresh · 3 sec</div>
           </div>
 
-          {error && (
-            <div className="mb-5 rounded-xl bg-[#fff0ef] px-4 py-3 text-sm text-[#a43b35]">{error}</div>
-          )}
+          {error && <div className="mb-5 rounded-2xl bg-[#fff0ef] px-4 py-3 text-sm text-[#a43b35]">{error}</div>}
 
           {loading ? (
-            <p className="text-sm text-[#66756f]">Loading dashboard...</p>
-          ) : offices.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#cfdad5] bg-white p-10 text-center">
-              <p className="text-lg font-semibold">No active offices</p>
-              <p className="mt-2 text-sm text-[#75847e]">When an office becomes available, it will appear here automatically.</p>
-            </div>
+            <div className="soft-card rounded-[30px] p-8 text-sm text-[#687970]">Loading dashboard...</div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-[24px] border border-[#dce5e1] bg-white p-6 shadow-[0_18px_60px_rgba(18,60,49,0.06)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8983]">Now serving</p>
+            <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr]">
+              <div className="soft-card fade-up rounded-[30px] p-6 sm:p-7">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#77867f]">Now serving</p>
+                    <p className="mt-1 text-sm text-[#708078]">Current student</p>
+                  </div>
+                  <span className="soft-inset rounded-full px-3 py-1.5 text-xs font-bold text-[#2a624f]">Live</span>
+                </div>
 
                 {queue?.called ? (
-                  <div className="mt-5">
-                    <p className="text-6xl font-semibold tracking-[-0.05em] text-[#123c31]">{queue.called.queue_number}</p>
-                    <div className="mt-5 rounded-2xl bg-[#f5f8f7] p-4">
-                      <p className="font-semibold">{queue.called.student_name}</p>
+                  <div className="mt-7">
+                    <p className="text-8xl font-semibold tracking-[-0.08em] text-[#123c31]">{queue.called.queue_number}</p>
+                    <div className="soft-inset mt-6 rounded-[24px] p-5">
+                      <p className="text-xl font-semibold tracking-[-0.025em]">{queue.called.student_name}</p>
                       <p className="mt-1 text-sm text-[#6f7d78]">{queue.called.student_id}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={markServed}
-                      disabled={actionLoading}
-                      className="mt-5 w-full rounded-xl bg-[#123c31] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0d3027] disabled:opacity-50"
-                    >
-                      {actionLoading ? "Updating..." : "Mark as served"}
-                    </button>
+                    <button type="button" onClick={markServed} disabled={actionLoading} className="soft-button mt-6 w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{actionLoading ? "Updating..." : "Mark as served →"}</button>
                   </div>
                 ) : (
-                  <div className="mt-5">
-                    <div className="rounded-2xl border border-dashed border-[#cfdad5] p-6 text-center">
-                      <p className="font-medium">No student currently called</p>
-                      <p className="mt-1 text-sm text-[#75847e]">{queue?.waitingCount ? "Call the next student when you are ready." : "There is nobody waiting in this queue yet."}</p>
+                  <div className="mt-7">
+                    <div className="soft-inset rounded-[24px] p-8 text-center">
+                      <p className="text-lg font-semibold">No one is being served</p>
+                      <p className="mt-2 text-sm leading-6 text-[#75847e]">Call the next student when the office is ready.</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={callNext}
-                      disabled={actionLoading || !queue || queue.waitingCount === 0}
-                      className="mt-5 w-full rounded-xl bg-[#123c31] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0d3027] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {actionLoading ? "Calling..." : queue?.waitingCount ? "Call next student" : "No student to call"}
-                    </button>
+                    <button type="button" onClick={callNext} disabled={actionLoading || !queue || queue.waitingCount === 0} className="soft-button mt-6 w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:cursor-not-allowed disabled:opacity-45">{actionLoading ? "Calling..." : queue?.waitingCount ? "Call next student →" : "No student to call"}</button>
                   </div>
                 )}
               </div>
 
-              <div className="rounded-[24px] border border-[#dce5e1] bg-white p-6 shadow-[0_18px_60px_rgba(18,60,49,0.06)]">
-                <div className="flex items-center justify-between">
+              <div className="soft-card fade-up-delay rounded-[30px] p-6 sm:p-7">
+                <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7a8983]">Waiting list</p>
-                    <p className="mt-1 text-sm text-[#66756f]">{queue?.waitingCount ?? 0} student{(queue?.waitingCount ?? 0) === 1 ? "" : "s"} waiting</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#77867f]">Waiting list</p>
+                    <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">{queue?.waitingCount ?? 0} waiting</h2>
                   </div>
+                  <div className="soft-inset flex h-14 min-w-14 items-center justify-center rounded-2xl px-4 text-2xl font-semibold text-[#123c31]">{queue?.waitingCount ?? 0}</div>
                 </div>
 
-                <div className="mt-5 space-y-3">
+                <div className="mt-6 space-y-3">
                   {queue?.waiting.length ? (
                     queue.waiting.map((student, index) => (
-                      <div key={student.id} className="flex items-center justify-between gap-4 rounded-2xl border border-[#e1e8e5] px-4 py-4">
+                      <div key={student.id} className="group flex items-center justify-between gap-4 rounded-[22px] bg-white/58 px-4 py-4 shadow-[inset_0_0_0_1px_rgba(18,60,49,.06)] transition hover:-translate-y-0.5 hover:bg-white/80">
                         <div className="flex min-w-0 items-center gap-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ef] font-semibold text-[#1f604e]">{student.queue_number}</div>
+                          <div className="soft-inset flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-[#235b4b]">{student.queue_number}</div>
                           <div className="min-w-0">
                             <p className="truncate font-semibold">{student.student_name}</p>
                             <p className="mt-1 truncate text-xs text-[#75847e]">{student.student_id}</p>
                           </div>
                         </div>
-                        <span className="shrink-0 rounded-full bg-[#f3f6f5] px-3 py-1 text-xs font-medium text-[#66756f]">Position {index + 1}</span>
+                        <span className="soft-inset shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-[#63736c]">#{index + 1}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-[#cfdad5] p-8 text-center">
-                      <p className="font-medium">Queue is clear</p>
-                      <p className="mt-1 text-sm text-[#75847e]">New students will appear here automatically after joining.</p>
+                    <div className="soft-inset rounded-[24px] p-10 text-center">
+                      <p className="text-lg font-semibold">The queue is clear</p>
+                      <p className="mt-2 text-sm text-[#75847e]">New students will appear here automatically.</p>
                     </div>
                   )}
                 </div>
