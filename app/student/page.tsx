@@ -51,7 +51,11 @@ export default function StudentPage() {
     }
 
     loadOffices();
-    setSavedQueueId(window.localStorage.getItem("queueless-entry-id"));
+    const savedQueueTimer = window.setTimeout(() => {
+      setSavedQueueId(window.localStorage.getItem("queueless-entry-id"));
+    }, 0);
+
+    return () => window.clearTimeout(savedQueueTimer);
   }, []);
 
   useEffect(() => {
