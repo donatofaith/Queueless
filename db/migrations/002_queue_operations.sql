@@ -2,14 +2,15 @@
 
 ALTER TABLE offices
   ADD COLUMN IF NOT EXISTS opens_at time NOT NULL DEFAULT '08:00',
-  ADD COLUMN IF NOT EXISTS closes_at time NOT NULL DEFAULT '16:00',
+  ADD COLUMN IF NOT EXISTS closes_at time NOT NULL DEFAULT '20:00',
   ADD COLUMN IF NOT EXISTS timezone text NOT NULL DEFAULT 'Africa/Lagos',
   ADD COLUMN IF NOT EXISTS average_service_minutes integer NOT NULL DEFAULT 10
     CHECK (average_service_minutes BETWEEN 1 AND 240);
 
 ALTER TABLE queue_entries
   ADD COLUMN IF NOT EXISTS cancelled_at timestamptz,
-  ADD COLUMN IF NOT EXISTS no_show_at timestamptz,\n  ADD COLUMN IF NOT EXISTS student_token uuid NOT NULL DEFAULT gen_random_uuid();
+  ADD COLUMN IF NOT EXISTS no_show_at timestamptz,
+  ADD COLUMN IF NOT EXISTS student_token uuid NOT NULL DEFAULT gen_random_uuid();
 
 -- Queue numbers are daily. This index also prevents duplicate numbers caused
 -- by two students joining the same office at nearly the same time.
