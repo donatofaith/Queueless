@@ -9,7 +9,7 @@ ALTER TABLE offices
 
 ALTER TABLE queue_entries
   ADD COLUMN IF NOT EXISTS cancelled_at timestamptz,
-  ADD COLUMN IF NOT EXISTS no_show_at timestamptz;
+  ADD COLUMN IF NOT EXISTS no_show_at timestamptz,\n  ADD COLUMN IF NOT EXISTS student_token uuid NOT NULL DEFAULT gen_random_uuid();
 
 -- Queue numbers are daily. This index also prevents duplicate numbers caused
 -- by two students joining the same office at nearly the same time.
