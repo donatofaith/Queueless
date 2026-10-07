@@ -1,29 +1,26 @@
 import { sql } from "@/lib/db";
-import { requireStaff } from "@/lib/staff-auth";
+import { canAccessOffice, requireStaff } from "@/lib/staff-auth";
 
 export async function POST(request: Request) {
   try {
-    const unauthorized = await requireStaff();
-    if (unauthorized) return unauthorized;
+    const auth = await requireStaff();
+    if ("response" in auth) return auth.response;
+    const { session } = auth;
 
     const body = await request.json();
     const officeId = String(body.officeId ?? "").trim();
     if (!officeId) return Response.json({ error: "Office is required" }, { status: 400 });
+    if (!canAccessOffice(session, officeId)) return Response.json({ error: "You are not authorized for this office" }, { status: 403 });
 
-    const alreadyCalled = await sql`
-      SELECT id FROM queue_entries WHERE office_id = ${officeId} AND status = 'called' LIMIT 1
-    `;
-    if (alreadyCalled.length > 0) {
-      return Response.json({ error: "Mark the current student as served before calling the next one" }, { status: 409 });
-    }
+    const office = await sql`SELECT id FROM offices WHERE id = ${officeId} AND school_id = ${session.schoolId} AND is_active = true LIMIT 1`;
+    if (office.length === 0) return Response.json({ error: "Office not found" }, { status: 404 });
+
+    const alreadyCalled = await sql`SELECT id FROM queue_entries WHERE office_id = ${officeId} AND status = 'called' LIMIT 1`;
+    if (alreadyCalled.length > 0) return Response.json({ error: "Mark the current student as served before calling the next one" }, { status: 409 });
 
     const nextStudent = await sql`
       UPDATE queue_entries SET status = 'called', called_at = now()
-      WHERE id = (
-        SELECT id FROM queue_entries
-        WHERE office_id = ${officeId} AND status = 'waiting'
-        ORDER BY joined_at ASC LIMIT 1
-      )
+      WHERE id = (SELECT id FROM queue_entries WHERE office_id = ${officeId} AND status = 'waiting' ORDER BY joined_at ASC LIMIT 1)
       RETURNING id, student_name, student_id, queue_number, status, joined_at, called_at
     `;
     if (nextStudent.length === 0) return Response.json({ error: "No students are waiting" }, { status: 404 });
