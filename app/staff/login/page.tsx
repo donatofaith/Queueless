@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 
 export default function StaffLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");\n  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +45,8 @@ export default function StaffLoginPage() {
         <h1 className="mt-8 text-3xl font-semibold tracking-[-0.04em]">Staff sign in</h1>
         <p className="mt-2 text-sm leading-6 text-[#6f7f78]">Sign in with your school staff account to manage your assigned queue.</p>
         <form onSubmit={submit} className="mt-7 space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" placeholder="Staff email" className="soft-inset w-full rounded-2xl border-0 px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-[#bcd8cd]" />\n          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Password" className="soft-inset w-full rounded-2xl border-0 px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-[#bcd8cd]" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" placeholder="Staff email" className="soft-inset w-full rounded-2xl border-0 px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-[#bcd8cd]" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Password" className="soft-inset w-full rounded-2xl border-0 px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-[#bcd8cd]" />
           {error && <div className="rounded-2xl bg-[#fff0ef] px-4 py-3 text-sm text-[#a43b35]">{error}</div>}
           <button disabled={loading} className="soft-button w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white disabled:opacity-50">{loading ? "Signing in..." : "Sign in →"}</button>
         </form>
