@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/staff")) {
+  if (pathname.startsWith("/staff") || pathname.startsWith("/admin")) {
     const session = request.cookies.get("queueless_staff_session");
     if (!session) {
       return NextResponse.redirect(new URL("/staff/login", request.url));
@@ -18,5 +18,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/staff/:path*"],
+  matcher: ["/staff/:path*", "/admin/:path*"],
 };
