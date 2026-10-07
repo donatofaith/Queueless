@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Retry once if simultaneous joins race for the same daily queue number.
-    let inserted;
+    let inserted: Awaited<ReturnType<typeof sql>> | null = null;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         inserted = await sql`
