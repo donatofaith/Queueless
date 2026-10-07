@@ -14,7 +14,7 @@ type QueueEntry = {
   status: "waiting" | "called" | "served" | "cancelled" | "no_show";
   position: number;
   joinedAt: string;
-  calledAt?: string | null;\n  estimatedWaitMinutes?: number;
+  calledAt?: string | null;\n  estimatedWaitMinutes?: number;\n  studentToken?: string;
 };
 
 const statusCopy: Record<QueueEntry["status"], string> = {
@@ -91,7 +91,7 @@ export default function StudentPage() {
 
       setQueueEntry(data);
       setSavedQueueId(data.id);
-      window.localStorage.setItem("queueless-entry-id", data.id);
+      window.localStorage.setItem("queueless-entry-id", data.id);\n      if (data.studentToken) window.localStorage.setItem(`queueless-entry-token:${data.id}`, data.studentToken);
     } catch {
       setError("Unable to join the queue. Please try again.");
     } finally {
@@ -104,7 +104,7 @@ export default function StudentPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/queue/${queueEntry.id}/leave`, { method: "POST" });
+      const studentToken = queueEntry.studentToken || window.localStorage.getItem(`queueless-entry-token:${queueEntry.id}`);\n      const response = await fetch(`/api/queue/${queueEntry.id}/leave`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ studentToken }) });
       const data = await response.json();
       if (!response.ok) { setError(data.error || "Unable to leave the queue."); return; }
       await loadQueueEntry(queueEntry.id);
