@@ -113,3 +113,13 @@ export async function requireStaff(): Promise<{ session: StaffSession } | { resp
 export function canAccessOffice(session: StaffSession, officeId: string) {
   return session.role === "admin" || session.officeId === officeId;
 }
+
+
+export async function requireAdmin(): Promise<{ session: StaffSession } | { response: Response }> {
+  const auth = await requireStaff();
+  if ("response" in auth) return auth;
+  if (auth.session.role !== "admin") {
+    return { response: Response.json({ error: "Administrator access required" }, { status: 403 }) };
+  }
+  return auth;
+}
