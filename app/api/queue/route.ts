@@ -46,7 +46,7 @@ export async function POST(request: Request) {
                AND (joined_at AT TIME ZONE ${office[0].timezone})::date = (now() AT TIME ZONE ${office[0].timezone})::date),
             'waiting'
           )
-          RETURNING id, queue_number, status, joined_at
+          RETURNING id, queue_number, status, joined_at, student_token
         `;
         break;
       } catch (error) {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const position = Number(positionResult[0].position);
     const estimatedWaitMinutes = Math.max(position - 1, 0) * Number(office[0].average_service_minutes);
 
-    return Response.json({ id: entry.id, studentName, studentId, officeId, officeName: office[0].name, queueNumber: entry.queue_number, status: entry.status, position, estimatedWaitMinutes, joinedAt: entry.joined_at }, { status: 201 });
+    return Response.json({ id: entry.id, studentName, studentId, officeId, officeName: office[0].name, queueNumber: entry.queue_number, status: entry.status, position, estimatedWaitMinutes, studentToken: entry.student_token, joinedAt: entry.joined_at }, { status: 201 });
   } catch (error) {
     console.error("Failed to join queue:", error);
     return Response.json({ error: "Unable to join the queue" }, { status: 500 });
