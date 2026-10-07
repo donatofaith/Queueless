@@ -34,7 +34,7 @@ export default function StaffPage() {
     async function loadOffices() {
       try {
         const response = await fetch("/api/offices", { cache: "no-store" });
-        if (!response.ok) throw new Error();
+        if (response.status === 401) { window.location.href = "/staff/login"; return; }\n        if (!response.ok) throw new Error();
         const data: Office[] = await response.json();
         setOffices(data);
         if (data.length > 0) setOfficeId(data[0].id);
@@ -124,7 +124,7 @@ export default function StaffPage() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">← Home</Link>
+            <Link href="/" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">← Home</Link>\n            <button type="button" onClick={async () => { await fetch("/api/staff/auth/logout", { method: "POST" }); window.location.href = "/staff/login"; }} className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">Sign out</button>
             <select value={officeId} onChange={(e) => setOfficeId(e.target.value)} className="soft-inset rounded-2xl border-0 px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#bcd8cd]">
               {offices.length === 0 && <option value="">No offices available</option>}
               {offices.map((office) => <option key={office.id} value={office.id}>{office.name}</option>)}
