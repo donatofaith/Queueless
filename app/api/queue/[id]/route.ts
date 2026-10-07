@@ -1,59 +1,35 @@
 import { sql } from "@/lib/db";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-
     const rows = await sql`
-      SELECT
-        q.id,
-        q.student_name,
-        q.student_id,
-        q.office_id,
-        q.queue_number,
-        q.status,
-        q.joined_at,
-        q.called_at,
-        o.name AS office_name
-      FROM queue_entries q
-      JOIN offices o ON o.id = q.office_id
-      WHERE q.id = ${id}
-      LIMIT 1
+      SELECT q.id, q.student_name, q.student_id, q.office_id, q.queue_number, q.status,
+             q.joined_at, q.called_at, o.name AS office_name, o.average_service_minutes
+      FROM queue_entries q JOIN offices o ON o.id = q.office_id
+      WHERE q.id = ${id} LIMIT 1
     `;
-
-    if (rows.length === 0) {
-      return Response.json({ error: "Queue entry not found" }, { status: 404 });
-    }
+    if (rows.length === 0) return Response.json({ error: "Queue entry not found" }, { status: 404 });
 
     const entry = rows[0];
     let position = 0;
-
     if (entry.status === "waiting") {
-      const positionResult = await sql`
-        SELECT COUNT(*)::int AS position
-        FROM queue_entries
-        WHERE office_id = ${entry.office_id}
-          AND status = 'waiting'
+      const result = await sql`
+        SELECT COUNT(*)::int AS position FROM queue_entries
+        WHERE office_id = ${entry.office_id} AND status = 'waiting'
+          AND joined_at::date = ${entry.joined_at}::date
           AND queue_number <= ${entry.queue_number}
       `;
-
-      position = positionResult[0].position;
+      position = Number(result[0].position);
     }
+    const estimatedWaitMinutes = entry.status === "waiting"
+      ? Math.max(position - 1, 0) * Number(entry.average_service_minutes)
+      : 0;
 
     return Response.json({
-      id: entry.id,
-      studentName: entry.student_name,
-      studentId: entry.student_id,
-      officeId: entry.office_id,
-      officeName: entry.office_name,
-      queueNumber: entry.queue_number,
-      status: entry.status,
-      position,
-      joinedAt: entry.joined_at,
-      calledAt: entry.called_at,
+      id: entry.id, studentName: entry.student_name, studentId: entry.student_id,
+      officeId: entry.office_id, officeName: entry.office_name, queueNumber: entry.queue_number,
+      status: entry.status, position, estimatedWaitMinutes, joinedAt: entry.joined_at, calledAt: entry.called_at,
     });
   } catch (error) {
     console.error("Failed to track queue entry:", error);
