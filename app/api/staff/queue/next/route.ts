@@ -1,47 +1,32 @@
 import { sql } from "@/lib/db";
+import { requireStaff } from "@/lib/staff-auth";
 
 export async function POST(request: Request) {
   try {
+    const unauthorized = await requireStaff();
+    if (unauthorized) return unauthorized;
+
     const body = await request.json();
     const officeId = String(body.officeId ?? "").trim();
-
-    if (!officeId) {
-      return Response.json({ error: "Office is required" }, { status: 400 });
-    }
+    if (!officeId) return Response.json({ error: "Office is required" }, { status: 400 });
 
     const alreadyCalled = await sql`
-      SELECT id
-      FROM queue_entries
-      WHERE office_id = ${officeId}
-        AND status = 'called'
-      LIMIT 1
+      SELECT id FROM queue_entries WHERE office_id = ${officeId} AND status = 'called' LIMIT 1
     `;
-
     if (alreadyCalled.length > 0) {
-      return Response.json(
-        { error: "Mark the current student as served before calling the next one" },
-        { status: 409 }
-      );
+      return Response.json({ error: "Mark the current student as served before calling the next one" }, { status: 409 });
     }
 
     const nextStudent = await sql`
-      UPDATE queue_entries
-      SET status = 'called', called_at = now()
+      UPDATE queue_entries SET status = 'called', called_at = now()
       WHERE id = (
-        SELECT id
-        FROM queue_entries
-        WHERE office_id = ${officeId}
-          AND status = 'waiting'
-        ORDER BY joined_at ASC
-        LIMIT 1
+        SELECT id FROM queue_entries
+        WHERE office_id = ${officeId} AND status = 'waiting'
+        ORDER BY joined_at ASC LIMIT 1
       )
       RETURNING id, student_name, student_id, queue_number, status, joined_at, called_at
     `;
-
-    if (nextStudent.length === 0) {
-      return Response.json({ error: "No students are waiting" }, { status: 404 });
-    }
-
+    if (nextStudent.length === 0) return Response.json({ error: "No students are waiting" }, { status: 404 });
     return Response.json(nextStudent[0]);
   } catch (error) {
     console.error("Failed to call next student:", error);
