@@ -27,6 +27,7 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const selectedOffice = useMemo(() => offices.find((office) => office.id === officeId), [offices, officeId]);
 
@@ -46,6 +47,10 @@ export default function StaffPage() {
       }
     }
     loadOffices();
+    fetch("/api/staff/me", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setIsAdmin(data?.role === "admin"))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -143,6 +148,7 @@ export default function StaffPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">← Home</Link>
+            {isAdmin && <Link href="/admin/staff" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">Manage staff</Link>}
             <button type="button" onClick={async () => { await fetch("/api/staff/auth/logout", { method: "POST" }); window.location.href = "/staff/login"; }} className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">Sign out</button>
             <select value={officeId} onChange={(e) => setOfficeId(e.target.value)} className="soft-inset rounded-2xl border-0 px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#bcd8cd]">
               {offices.length === 0 && <option value="">No offices available</option>}
