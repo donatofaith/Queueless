@@ -92,6 +92,23 @@ export default function StaffPage() {
     }
   }
 
+  async function markNoShow() {
+    if (!queue?.called) return;
+    setActionLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/staff/queue/${queue.called.id}/no-show`, { method: "POST" });
+      const data = await response.json();
+      if (response.status === 401) { window.location.href = "/staff/login"; return; }
+      if (!response.ok) { setError(data.error || "Unable to mark no-show."); return; }
+      await loadQueue();
+    } catch {
+      setError("Unable to mark no-show.");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function markServed() {
     if (!queue?.called) return;
     setActionLoading(true);
@@ -166,7 +183,10 @@ export default function StaffPage() {
                       <p className="text-xl font-semibold tracking-[-0.025em]">{queue.called.student_name}</p>
                       <p className="mt-1 text-sm text-[#6f7d78]">{queue.called.student_id}</p>
                     </div>
-                    <button type="button" onClick={markServed} disabled={actionLoading} className="soft-button mt-6 w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{actionLoading ? "Updating..." : "Mark as served →"}</button>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                      <button type="button" onClick={markServed} disabled={actionLoading} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{actionLoading ? "Updating..." : "Mark served →"}</button>
+                      <button type="button" onClick={markNoShow} disabled={actionLoading} className="soft-inset rounded-2xl px-5 py-4 text-sm font-bold text-[#52635c] disabled:opacity-50">No-show</button>
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-7">
