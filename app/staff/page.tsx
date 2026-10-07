@@ -34,6 +34,7 @@ export default function StaffPage() {
     async function loadOffices() {
       try {
         const response = await fetch("/api/offices", { cache: "no-store" });
+        if (response.status === 401) { window.location.href = "/staff/login"; return; }
         if (!response.ok) throw new Error();
         const data: Office[] = await response.json();
         setOffices(data);
@@ -92,6 +93,23 @@ export default function StaffPage() {
     }
   }
 
+  async function markNoShow() {
+    if (!queue?.called) return;
+    setActionLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/staff/queue/${queue.called.id}/no-show`, { method: "POST" });
+      const data = await response.json();
+      if (response.status === 401) { window.location.href = "/staff/login"; return; }
+      if (!response.ok) { setError(data.error || "Unable to mark no-show."); return; }
+      await loadQueue();
+    } catch {
+      setError("Unable to mark no-show.");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function markServed() {
     if (!queue?.called) return;
     setActionLoading(true);
@@ -125,6 +143,7 @@ export default function StaffPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/" className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">← Home</Link>
+            <button type="button" onClick={async () => { await fetch("/api/staff/auth/logout", { method: "POST" }); window.location.href = "/staff/login"; }} className="soft-inset rounded-full px-4 py-2 text-xs font-semibold text-[#52635c]">Sign out</button>
             <select value={officeId} onChange={(e) => setOfficeId(e.target.value)} className="soft-inset rounded-2xl border-0 px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#bcd8cd]">
               {offices.length === 0 && <option value="">No offices available</option>}
               {offices.map((office) => <option key={office.id} value={office.id}>{office.name}</option>)}
@@ -166,7 +185,10 @@ export default function StaffPage() {
                       <p className="text-xl font-semibold tracking-[-0.025em]">{queue.called.student_name}</p>
                       <p className="mt-1 text-sm text-[#6f7d78]">{queue.called.student_id}</p>
                     </div>
-                    <button type="button" onClick={markServed} disabled={actionLoading} className="soft-button mt-6 w-full rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{actionLoading ? "Updating..." : "Mark as served →"}</button>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                      <button type="button" onClick={markServed} disabled={actionLoading} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{actionLoading ? "Updating..." : "Mark served →"}</button>
+                      <button type="button" onClick={markNoShow} disabled={actionLoading} className="soft-inset rounded-2xl px-5 py-4 text-sm font-bold text-[#52635c] disabled:opacity-50">No-show</button>
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-7">

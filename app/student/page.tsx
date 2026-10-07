@@ -11,10 +11,12 @@ type QueueEntry = {
   officeId: string;
   officeName: string;
   queueNumber: number;
-  status: "waiting" | "called" | "served" | "cancelled";
+  status: "waiting" | "called" | "served" | "cancelled" | "no_show";
   position: number;
   joinedAt: string;
   calledAt?: string | null;
+  estimatedWaitMinutes?: number;
+  studentToken?: string;
 };
 
 const statusCopy: Record<QueueEntry["status"], string> = {
@@ -22,6 +24,7 @@ const statusCopy: Record<QueueEntry["status"], string> = {
   called: "Called",
   served: "Completed",
   cancelled: "Cancelled",
+  no_show: "No-show",
 };
 
 export default function StudentPage() {
@@ -48,7 +51,11 @@ export default function StudentPage() {
     }
 
     loadOffices();
-    setSavedQueueId(window.localStorage.getItem("queueless-entry-id"));
+    const savedQueueTimer = window.setTimeout(() => {
+      setSavedQueueId(window.localStorage.getItem("queueless-entry-id"));
+    }, 0);
+
+    return () => window.clearTimeout(savedQueueTimer);
   }, []);
 
   useEffect(() => {
@@ -92,8 +99,28 @@ export default function StudentPage() {
       setQueueEntry(data);
       setSavedQueueId(data.id);
       window.localStorage.setItem("queueless-entry-id", data.id);
+      if (data.studentToken) window.localStorage.setItem(`queueless-entry-token:${data.id}`, data.studentToken);
     } catch {
       setError("Unable to join the queue. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function leaveQueue() {
+    if (!queueEntry || queueEntry.status !== "waiting") return;
+    setLoading(true);
+    setError("");
+    try {
+      const studentToken = queueEntry.studentToken || window.localStorage.getItem(`queueless-entry-token:${queueEntry.id}`);
+      const response = await fetch(`/api/queue/${queueEntry.id}/leave`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ studentToken }) });
+      const data = await response.json();
+      if (!response.ok) { setError(data.error || "Unable to leave the queue."); return; }
+      await loadQueueEntry(queueEntry.id);
+      window.localStorage.removeItem("queueless-entry-id");
+      setSavedQueueId(null);
+    } catch {
+      setError("Unable to leave the queue.");
     } finally {
       setLoading(false);
     }
@@ -165,12 +192,23 @@ export default function StudentPage() {
                       {queueEntry.status === "called" && "It’s your turn — proceed to the office."}
                       {queueEntry.status === "served" && "You’re all done."}
                       {queueEntry.status === "cancelled" && "This queue entry is no longer active."}
+                      {queueEntry.status === "no_show" && "You were marked as a no-show. You can join again if you still need service."}
                     </p>
                     <p className="mt-2 text-sm text-[#72817b]">Your queue status refreshes automatically.</p>
+                    {queueEntry.status === "waiting" && (
+                      <p className="mt-2 text-sm font-semibold text-[#52635c]">
+                        Estimated wait: {queueEntry.estimatedWaitMinutes === 0 ? "less than 10 minutes" : `about ${queueEntry.estimatedWaitMinutes} minutes`}
+                      </p>
+                    )}
                   </div>
 
+                  {error && <p className="mt-4 rounded-2xl bg-[#fff0ef] px-4 py-3 text-sm text-[#a43b35]">{error}</p>}
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    <button type="button" onClick={startAnotherQueue} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329]">Join another queue</button>
+                    {queueEntry.status === "waiting" ? (
+                      <button type="button" onClick={leaveQueue} disabled={loading} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329] disabled:opacity-50">{loading ? "Leaving..." : "Leave queue"}</button>
+                    ) : (
+                      <button type="button" onClick={startAnotherQueue} className="soft-button rounded-2xl bg-[#123c31] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#0d3329]">Join another queue</button>
+                    )}
                     <button type="button" onClick={clearSavedQueue} className="soft-inset rounded-2xl px-5 py-4 text-sm font-bold text-[#52635c] transition hover:text-[#123c31]">Forget this queue</button>
                   </div>
                 </div>
